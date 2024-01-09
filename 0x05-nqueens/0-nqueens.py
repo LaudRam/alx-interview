@@ -1,47 +1,91 @@
 #!/usr/bin/python3
-"""
-The N queens puzzle is the challenge of placing
-N non-attacking queens on an NxN chessboard.
-Write a program that solves the N queens problem.
-"""
+'''N Queens Challenge'''
 
 import sys
 
 
-def nqueens(list):
-    """the function accepts a list as a parameter"""
+if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print("Usage: nqueens N")
+        sys.exit(1)
+
     try:
-        if len(list[0]) != 2:
-            print("Usage: nqueens N")
-            exit(1)
-        NxN = int(list[0][1])
-        if NxN < 4:
-            print("N must be at least 4")
-            exit(1)
-        col = list[1]
-        listThreat = list[2]
-        for row in range(NxN):
-            nonAttack = 1
-            for move in listThreat:
-                if move[1] == row:
-                    nonAttack = 0
-                    break
-                if col - row == move[0] - move[1]:
-                    nonAttack = 0
-                    break
-                if row - move[1] == move[0] - col:
-                    nonAttack = 0
-                    break
-            if nonAttack == 1:
-                listThreat.append([col, row])
-                if NxN - 1 != col:
-                    nqueens([list[0], col + 1, listThreat])
-                else:
-                    print(listThreat)
-                del listThreat[-1]
+        n = int(sys.argv[1])
     except ValueError:
-        print("N must be a number")
+        print('N must be a number')
         exit(1)
 
+    if n < 4:
+        print('N must be at least 4')
+        exit(1)
 
-nqueens([sys.argv, 0, []])
+    solutions = []
+    placed_queens = []  # coordinates format [row, column]
+    stop = False
+    r = 0
+    c = 0
+
+    # iterate thru rows
+    while r < n:
+        goback = False
+        # iterate thru columns
+        while c < n:
+            # check is current column is safe
+            safe = True
+            for cord in placed_queens:
+                col = cord[1]
+                if(col == c or col + (r-cord[0]) == c or
+                        col - (r-cord[0]) == c):
+                    safe = False
+                    break
+
+            if not safe:
+                if c == n - 1:
+                    goback = True
+                    break
+                c += 1
+                continue
+
+            # place queen
+            cords = [r, c]
+            placed_queens.append(cords)
+            # if last row, append solution and reset all to last unfinished row
+            # and last safe column in that row
+            if r == n - 1:
+                solutions.append(placed_queens[:])
+                for cord in placed_queens:
+                    if cord[1] < n - 1:
+                        r = cord[0]
+                        c = cord[1]
+                for i in range(n - r):
+                    placed_queens.pop()
+                if r == n - 1 and c == n - 1:
+                    placed_queens = []
+                    stop = True
+                r -= 1
+                c += 1
+            else:
+                c = 0
+            break
+        if stop:
+            break
+        # on fail: go back to previous row
+        # and continue from last safe column + 1
+        if goback:
+            r -= 1
+            while r >= 0:
+                c = placed_queens[r][1] + 1
+                del placed_queens[r]  # delete previous queen coordinates
+                if c < n:
+                    break
+                r -= 1
+            if r < 0:
+                break
+            continue
+        r += 1
+
+    for idx, val in enumerate(solutions):
+        if idx == len(solutions) - 1:
+            print(val, end='')
+        else:
+            print(val)
